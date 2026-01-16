@@ -14,8 +14,8 @@ def generar_archivo_txt():
     with open("cartones_masivos.txt", "w", encoding="utf-8") as f:
         # Generamos 1000 cartones (Suficiente para 5 jugadores de 200 c/u)
         tipos = ["SP", "EN", "PT", "DT"]
-        
-        for i in range(1, 1001):
+        cantidad_cartones = 1000000
+        for i in range(1, cantidad_cartones + 1):
             # Aseguramos variedad cíclica (SP, EN, PT, DT, SP...)
             tipo = tipos[(i-1) % 4]
             cant = REGLAS[tipo]
@@ -28,7 +28,7 @@ def generar_archivo_txt():
             linea = f"{id_carton} {' '.join(palabras)}\n"
             f.write(linea)
             
-    print("✅ Archivo creado exitosamente con 1000 cartones.")
+    print(f"✅ Archivo creado exitosamente con {cantidad_cartones} cartones.")
 
 if __name__ == "__main__":
     generar_archivo_txt()
