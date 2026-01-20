@@ -242,8 +242,8 @@ class GameManager:
         idioma_actual = self.orden_idiomas[self.idioma_actual_idx]
 
         # Validar que la palabra pertenezca al idioma actual
-        # Para idiomas en BANCO_PALABRAS, validar contra el banco
         if idioma_actual in BANCO_PALABRAS:
+            # Para idiomas predefinidos, validar contra el banco
             banco = BANCO_PALABRAS[idioma_actual]
             if palabra not in banco:
                 return {
@@ -251,11 +251,11 @@ class GameManager:
                     "idioma": idioma_actual
                 }
         else:
-            # Para idiomas personalizados, validar que la palabra exista en al menos un cartón del idioma
+            # Para idiomas personalizados, validar que la palabra exista SOLO en cartones de ese idioma
             palabra_valida = False
             for jug in self.jugadores:
                 for carton in jug.cartones:
-                    if carton.idioma == idioma_actual and palabra in carton.palabras:
+                    if carton.get_idioma() == idioma_actual and palabra in carton.palabras:
                         palabra_valida = True
                         break
                 if palabra_valida:
@@ -266,6 +266,14 @@ class GameManager:
                     "error": f"La palabra '{palabra}' no existe en ningún cartón del idioma {idioma_actual}",
                     "idioma": idioma_actual
                 }
+            
+            # Validación adicional: rechazar palabras de otros idiomas predefinidos
+            for idioma_pred in BANCO_PALABRAS:
+                if palabra in BANCO_PALABRAS[idioma_pred]:
+                    return {
+                        "error": f"La palabra '{palabra}' pertenece al idioma {idioma_pred}, no al idioma personalizado {idioma_actual}",
+                        "idioma": idioma_actual
+                    }
 
         # Registrar palabra con su idioma
         self.palabras_cantadas.append({
@@ -323,5 +331,6 @@ class GameManager:
             "idioma_actual": self.get_idioma_actual() if self.orden_idiomas else None,
             "orden_idiomas": self.orden_idiomas,
             "palabras_cantadas": self.palabras_cantadas,
-            "total_jugadores": len(self.jugadores)
+            "total_jugadores": len(self.jugadores),
+            "nombres_idiomas_config": self.nombres_idiomas_config
         }

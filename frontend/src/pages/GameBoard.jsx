@@ -63,7 +63,9 @@ const GameBoard = ({ estadoInicial }) => {
     } catch (error) {
       const detail = error?.response?.data?.detail;
       const msg = typeof detail === 'string' ? detail : (detail?.error || '❌ Error al cantar palabra');
-      if (msg.toLowerCase().includes('no pertenece al idioma')) {
+      if (msg.toLowerCase().includes('no pertenece al idioma') || 
+          msg.toLowerCase().includes('no existe en ningún cartón') ||
+          msg.toLowerCase().includes('pertenece al idioma')) {
         setModalError(msg);
       } else {
         setMensaje(msg);
@@ -170,17 +172,49 @@ const GameBoard = ({ estadoInicial }) => {
         {/* Palabras cantadas */}
         <div className="palabras-cantadas">
           <strong>Palabras cantadas:</strong>
-          <div className="palabras-list">
-            {(estado.palabras_cantadas || []).map((p, idx) => {
-              const esObjeto = p && typeof p === 'object';
-              const codigo = esObjeto ? p.idioma : (String(p).split(':')[0] || '');
-              const texto = esObjeto ? p.palabra : (String(p).includes(':') ? String(p).split(':').slice(1).join(':') : String(p));
-              return (
-                <span key={idx} className="palabra-tag">
-                  {codigo && <span className="palabra-codigo">{codigo}</span>} {texto}
-                </span>
-              );
-            })}
+          <div className="palabras-por-idioma">
+            {(() => {
+              // Crear mapa de códigos a nombres desde idiomas_orden (misma fuente que idioma_actual)
+              const nombresIdiomas = {};
+              if (estado.idiomas_orden) {
+                estado.idiomas_orden.forEach(idioma => {
+                  if (typeof idioma === 'object') {
+                    nombresIdiomas[idioma.codigo] = idioma.nombre;
+                  }
+                });
+              }
+
+              // Agrupar palabras por idioma
+              const palabrasPorIdioma = {};
+              (estado.palabras_cantadas || []).forEach(p => {
+                const esObjeto = p && typeof p === 'object';
+                const codigo = esObjeto ? p.idioma : (String(p).split(':')[0] || '');
+                const texto = esObjeto ? p.palabra : (String(p).includes(':') ? String(p).split(':').slice(1).join(':') : String(p));
+                
+                if (!palabrasPorIdioma[codigo]) {
+                  palabrasPorIdioma[codigo] = [];
+                }
+                palabrasPorIdioma[codigo].push(texto);
+              });
+
+              // Renderizar por idioma
+              return Object.entries(palabrasPorIdioma).map(([idioma, palabras]) => {
+                return (
+                  <div key={idioma} className="idioma-grupo">
+                    <div className="idioma-grupo-titulo">
+                      {idioma.toUpperCase()}:
+                    </div>
+                    <div className="palabras-list">
+                      {palabras.map((palabra, idx) => (
+                        <span key={idx} className="palabra-tag">
+                          {palabra}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
           </div>
         </div>
       </div>

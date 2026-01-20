@@ -2,6 +2,8 @@
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 .game-header {
@@ -30,11 +32,12 @@
 .btn-reset {
   background: linear-gradient(135deg, #fa5252 0%, #f03e3e 100%);
   color: white;
-  padding: 10px 20px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 0.95rem;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(250, 82, 82, 0.3);
 }
@@ -48,11 +51,12 @@
 .btn-finalizar {
   background: linear-gradient(135deg, #fa5252 0%, #f03e3e 100%);
   color: white;
-  padding: 10px 18px;
+  padding: 12px 24px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 0.95rem;
   transition: all 0.3s ease;
   box-shadow: 0 4px 12px rgba(250, 82, 82, 0.3);
 }
@@ -66,11 +70,14 @@
 .control-panel {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
-  padding: 25px;
+  padding: 30px;
   border-radius: 15px;
   margin-bottom: 30px;
   border: 1px solid rgba(255, 255, 255, 0.3);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .idioma-info {
@@ -81,7 +88,9 @@
 .idioma-info h2 {
   margin: 0 0 15px 0;
   color: #ffffff;
-  font-size: 1.8rem;
+  font-size: 2.2rem;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .idiomas-orden {
@@ -115,19 +124,22 @@
 
 .cantar-form {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 15px;
+  margin-bottom: 25px;
+  flex-wrap: wrap;
 }
 
 .cantar-form input {
   flex: 1;
-  padding: 12px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 8px;
-  font-size: 1rem;
-  background: rgba(255, 255, 255, 0.8);
+  min-width: 250px;
+  padding: 14px 16px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 10px;
+  font-size: 1.1rem;
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(10px);
   color: #212529;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .cantar-form input:focus {
@@ -138,12 +150,14 @@
 }
 
 .cantar-form button {
-  padding: 12px 24px;
+  padding: 14px 32px;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
   font-weight: 600;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-width: 140px;
 }
 
 .cantar-form button[type="submit"] {
@@ -174,9 +188,32 @@ button:disabled {
 }
 
 .palabras-cantadas {
-  padding: 15px;
+  padding: 18px;
   background: #f8f9fa;
+  border-radius: 10px;
+  flex: 1;
+  overflow-y: auto;
+  margin-top: 25px;
+}
+
+.palabras-por-idioma {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.idioma-grupo {
+  background: rgba(255, 255, 255, 0.7);
+  padding: 12px;
   border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.idioma-grupo-titulo {
+  font-weight: 700;
+  color: #495057;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
 }
 
 .ronda-info {
@@ -216,6 +253,7 @@ button:disabled {
   font-size: 0.9rem;
   font-weight: 600;
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  display: inline-block;
 }
 
 .palabra-codigo {
