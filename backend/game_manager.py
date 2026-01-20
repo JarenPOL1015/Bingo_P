@@ -39,22 +39,22 @@ class GameManager:
         
         # VALIDACIÓN 1: ID debe tener 8 caracteres
         if len(id_c) != 8:
-            return None, f"Línea {linea_num}: ❌ Cartón {id_c}: ID debe tener exactamente 8 caracteres"
+            return None, f"Línea {linea_num}: Cartón {id_c}: ID debe tener exactamente 8 caracteres"
         
         # VALIDACIÓN 2: Primeros 2 caracteres deben ser letras (idioma)
         prefijo = id_c[:2]
         if not prefijo.isalpha():
-            return None, f"Línea {linea_num}: ❌ Cartón {id_c}: Primeros 2 caracteres deben ser letras"
+            return None, f"Línea {linea_num}: Cartón {id_c}: Primeros 2 caracteres deben ser letras"
         
         # VALIDACIÓN 3: Últimos 6 caracteres deben ser números
         sufijo = id_c[2:]
         if not sufijo.isdigit():
-            return None, f"Línea {linea_num}: ❌ Cartón {id_c}: Últimos 6 caracteres deben ser numéricos"
+            return None, f"Línea {linea_num}: Cartón {id_c}: Últimos 6 caracteres deben ser numéricos"
         
         # VALIDACIÓN 4: Idioma debe estar en las reglas configuradas
         if prefijo not in reglas:
             idiomas_validos = ', '.join(reglas.keys())
-            return None, f"Línea {linea_num}: ❌ Cartón {id_c}: Idioma '{prefijo}' no válido. Idiomas permitidos: {idiomas_validos}"
+            return None, f"Línea {linea_num}: Cartón {id_c}: Idioma '{prefijo}' no válido. Idiomas permitidos: {idiomas_validos}"
         
         # VALIDACIÓN 5: Cantidad de palabras debe coincidir EXACTAMENTE
         config_idioma = reglas[prefijo]
@@ -63,7 +63,7 @@ class GameManager:
         
         if cant_recibida != cant_esperada:
             nombre_idioma = config_idioma['nombre']
-            return None, f"Línea {linea_num}: ❌ Cartón {id_c}: {nombre_idioma} requiere EXACTAMENTE {cant_esperada} palabras, recibió {cant_recibida}"
+            return None, f"Línea {linea_num}: Cartón {id_c}: {nombre_idioma} requiere EXACTAMENTE {cant_esperada} palabras, recibió {cant_recibida}"
         
         return Carton(id_c, palabras), None
     
@@ -105,7 +105,7 @@ class GameManager:
         
         if idiomas_faltantes:
             nombres_faltantes = [reglas_idiomas[codigo]['nombre'] for codigo in idiomas_faltantes]
-            error_msg = f"⚠️ Faltan cartones para los siguientes idiomas configurados: {', '.join(sorted(idiomas_faltantes))} ({', '.join(nombres_faltantes)})"
+            error_msg = f"Faltan cartones para los siguientes idiomas configurados: {', '.join(sorted(idiomas_faltantes))} ({', '.join(nombres_faltantes)})"
             return False, "Idiomas incompletos", error_msg
 
         # Registrar idiomas configurados para el orden de juego y sus nombres
@@ -168,7 +168,7 @@ class GameManager:
         for i, pack in enumerate(jugadores_cartones, start=1):
             self.jugadores.append(Jugador(f"Jugador_{i}", pack))
         
-        mensaje = f"✅ {len(lista_bruta)} cartones cargados y repartidos entre {n_jugadores} jugadores"
+        mensaje = f"{len(lista_bruta)} cartones cargados y repartidos entre {n_jugadores} jugadores"
         return True, mensaje, None
     
     def crear_carton_manual(self, id_carton: str, palabras: List[str]) -> Tuple[bool, str, Optional[Carton]]:

@@ -299,7 +299,7 @@ def bingo_demo(idioma: str = "SP"):
 # =============================================================================
 
 if __name__ == "__main__":
-    print("🎮 Iniciando servidor Bingo API...")
-    print("📍 URL: http://localhost:8000")
-    print("📚 Docs: http://localhost:8000/docs")
+    print("Iniciando servidor Bingo API...")
+    print("URL: http://localhost:8000")
+    print("Docs: http://localhost:8000/docs")
     uvicorn.run(app, host="0.0.0.0", port=8000)
