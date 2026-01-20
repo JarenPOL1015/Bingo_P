@@ -79,6 +79,7 @@ async def cargar_masivo(
     file: UploadFile = File(...), 
     n_jugadores: int = 5,
     config_idiomas: str = Form(...),
+    bancos_idiomas: str = Form("{}"),
     rule_type: str = Form("minimo_uno")  # minimo_uno | uno_por_idioma
 ):
     """Carga cartones desde archivo TXT con configuración de idiomas personalizada"""
@@ -120,12 +121,25 @@ async def cargar_masivo(
                 "error": "No se encontraron idiomas válidos en la configuración",
                 "linea": None
             })
+
+        # Parsear bancos de palabras declarados por el front (pueden venir vacíos)
+        bancos_config = {}
+        try:
+            bancos_raw = json.loads(bancos_idiomas)
+            if isinstance(bancos_raw, dict):
+                for codigo, palabras in bancos_raw.items():
+                    if not isinstance(palabras, list):
+                        continue
+                    bancos_config[codigo.upper()] = [str(p).upper() for p in palabras]
+        except json.JSONDecodeError:
+            bancos_config = {}
         
         # Cargar cartones con reglas dinámicas
         exito, mensaje, error_linea = game.cargar_cartones_masivos(
             contenido_str, 
             n_jugadores,
             reglas_dinamicas,
+            bancos_config,
             rule_type
         )
         

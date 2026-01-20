@@ -20,10 +20,11 @@ export const api = {
   },
 
   // Carga masiva con configuración de idiomas
-  async cargarMasivo(file, nJugadores, configIdiomas, ruleType = 'minimo_uno') {
+  async cargarMasivo(file, nJugadores, configIdiomas, ruleType = 'minimo_uno', bancosIdiomas = {}) {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('config_idiomas', JSON.stringify(configIdiomas));
+    formData.append('bancos_idiomas', JSON.stringify(bancosIdiomas));
     formData.append('rule_type', ruleType);
     
     const response = await fetch(`${API_BASE_URL}/cargar-masivo?n_jugadores=${nJugadores}`, {

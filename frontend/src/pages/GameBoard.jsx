@@ -14,6 +14,7 @@ const GameBoard = ({ estadoInicial }) => {
   const [ganador, setGanador] = useState(null);
   const [finSinGanador, setFinSinGanador] = useState(false);
   const [modalError, setModalError] = useState(null);
+  const [mostrarBancoPalabras, setMostrarBancoPalabras] = useState(false);
 
   useEffect(() => {
     if (estadoInicial) {
@@ -167,6 +168,14 @@ const GameBoard = ({ estadoInicial }) => {
           <button type="submit" disabled={loading || ganador}>
             {loading ? '...' : '📢 Cantar'}
           </button>
+          <button 
+            type="button"
+            className="btn-banco-palabras"
+            onClick={() => setMostrarBancoPalabras(true)}
+            disabled={loading || ganador}
+          >
+            📚 Ver banco
+          </button>
         </form>
 
         {/* Palabras cantadas */}
@@ -253,6 +262,52 @@ const GameBoard = ({ estadoInicial }) => {
       {mensaje && (
         <div className={`mensaje-flotante ${mensaje.includes('❌') ? 'error' : 'success'}`}>
           {mensaje}
+        </div>
+      )}
+
+      {/* Modal de banco de palabras */}
+      {mostrarBancoPalabras && estado && (
+        <div className="modal-overlay" onClick={() => setMostrarBancoPalabras(false)}>
+          <div className="modal-banco-palabras" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header-banco">
+              <h2>📚 Banco de Palabras - {idiomaActual?.nombre || 'Idioma'}</h2>
+              <button 
+                className="btn-cerrar-modal" 
+                onClick={() => setMostrarBancoPalabras(false)}
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="palabras-grid">
+              {(() => {
+                const palabras = estado?.banco_palabras?.[idiomaActual?.codigo] || [];
+
+                return palabras.length > 0 ? (
+                  palabras.map((palabra) => (
+                    <div 
+                      key={palabra} 
+                      className={`palabra-badge ${estado.palabras_cantadas?.some(p => (p?.palabra || p) === palabra) ? 'cantada' : ''}`}
+                    >
+                      {palabra}
+                    </div>
+                  ))
+                ) : (
+                  <p className="sin-palabras">No hay palabras configuradas para este idioma</p>
+                );
+              })()}
+            </div>
+            
+            <div className="modal-footer-banco">
+              <p className="total-palabras">Total: {(estado?.banco_palabras?.[idiomaActual?.codigo] || []).length} palabras</p>
+              <button 
+                className="btn-cerrar"
+                onClick={() => setMostrarBancoPalabras(false)}
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

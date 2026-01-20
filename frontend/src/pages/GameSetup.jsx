@@ -1,6 +1,23 @@
 import React, { useState } from 'react';
 import { api } from '../services/api';
+import IdiomasModal from './IdiomasModal';
 import './GameSetup.css';
+
+// Banco de palabras predefinidas
+const BANCO_PREDEFINIDO = {
+  'SP': ['CASA', 'PERRO', 'GATO', 'SOL', 'LUNA', 'PLAYA', 'MAR', 'TIEMPO', 'VIDA', 'MANZANA', 
+         'MESA', 'SILLA', 'ARBOL', 'COCHE', 'LIBRO', 'COMPUTADORA', 'TECLADO', 'RATON', 
+         'PANTALLA', 'INTERNET', 'CODIGO', 'PYTHON', 'JAVA', 'DATOS'],
+  'EN': ['HOUSE', 'DOG', 'CAT', 'SUN', 'MOON', 'BEACH', 'SEA', 'TIME', 'LIFE', 'APPLE', 
+         'TABLE', 'CHAIR', 'TREE', 'CAR', 'BOOK', 'COMPUTER', 'KEYBOARD', 'MOUSE', 
+         'SCREEN', 'INTERNET', 'CODE', 'PYTHON', 'JAVA', 'DATA'],
+  'PT': ['CASA', 'CACHORRO', 'GATO', 'SOL', 'LUA', 'PRAIA', 'MAR', 'TEMPO', 'VIDA', 'MACA', 
+         'MESA', 'CADEIRA', 'ARVORE', 'CARRO', 'LIVRO', 'COMPUTADOR', 'TECLADO', 'MOUSE', 
+         'TELA', 'INTERNET', 'CODIGO', 'PYTHON', 'JAVA', 'DADOS'],
+  'DT': ['HUIS', 'HOND', 'KAT', 'ZON', 'MAAN', 'STRAND', 'ZEE', 'TIJD', 'LEVEN', 'APPEL', 
+         'TAFEL', 'STOEL', 'BOOM', 'AUTO', 'BOEK', 'COMPUTER', 'TOETSENBORD', 'MUIS', 
+         'SCHERM', 'INTERNET', 'CODE', 'PYTHON', 'JAVA', 'DATA']
+};
 
 const GameSetup = ({ onGameReady }) => {
   // Estados básicos
@@ -11,39 +28,25 @@ const GameSetup = ({ onGameReady }) => {
   const [error, setError] = useState(null);
   const [ruleType, setRuleType] = useState('minimo_uno');
 
-  // Configuración de idiomas (editable por el usuario)
+  // Configuración de idiomas con banco de palabras
   const [idiomas, setIdiomas] = useState([
-    { codigo: 'SP', nombre: 'Español', maxPalabras: 24 },
-    { codigo: 'EN', nombre: 'Inglés', maxPalabras: 14 },
-    { codigo: 'PT', nombre: 'Portugués', maxPalabras: 20 },
-    { codigo: 'DT', nombre: 'Dutch', maxPalabras: 10 },
+    { codigo: 'SP', nombre: 'Español', palabras: BANCO_PREDEFINIDO['SP'], cantidadEnCarton: 24 },
+    { codigo: 'EN', nombre: 'Inglés', palabras: BANCO_PREDEFINIDO['EN'], cantidadEnCarton: 14 },
+    { codigo: 'PT', nombre: 'Portugués', palabras: BANCO_PREDEFINIDO['PT'], cantidadEnCarton: 20 },
+    { codigo: 'DT', nombre: 'Dutch', palabras: BANCO_PREDEFINIDO['DT'], cantidadEnCarton: 10 },
   ]);
 
-  const [mostrarConfig, setMostrarConfig] = useState(false);
+  const [mostrarModalIdiomas, setMostrarModalIdiomas] = useState(false);
 
-  // Agregar nuevo idioma
-  const agregarIdioma = () => {
-    setIdiomas([...idiomas, { codigo: '', nombre: '', maxPalabras: 0 }]);
-  };
-
-  // Actualizar idioma existente
-  const actualizarIdioma = (index, campo, valor) => {
-    const nuevosIdiomas = [...idiomas];
-    if (campo === 'maxPalabras') {
-      const num = parseInt(valor);
-      nuevosIdiomas[index][campo] = isNaN(num) || num < 0 ? 0 : num;
-    } else if (campo === 'codigo') {
-      nuevosIdiomas[index][campo] = valor.toUpperCase();
-    } else {
-      // Para 'nombre', mantener como está (sin convertir a mayúsculas)
-      nuevosIdiomas[index][campo] = valor;
-    }
+  // Actualizar cantidad de palabras en cartón
+  const actualizarCantidadCarton = (codigo, cantidad) => {
+    const nuevosIdiomas = idiomas.map(idioma => {
+      if (idioma.codigo === codigo) {
+        return { ...idioma, cantidadEnCarton: Math.max(0, parseInt(cantidad) || 0) };
+      }
+      return idioma;
+    });
     setIdiomas(nuevosIdiomas);
-  };
-
-  // Eliminar idioma
-  const eliminarIdioma = (index) => {
-    setIdiomas(idiomas.filter((_, i) => i !== index));
   };
 
   const handleCargaMasiva = async () => {
@@ -58,17 +61,18 @@ const GameSetup = ({ onGameReady }) => {
       return;
     }
 
-    // Validar configuración de idiomas - filtrar solo los completos
+    // Validar configuración de idiomas
     const idiomasValidos = idiomas.filter(i => 
       i.codigo && 
       i.codigo.trim() !== '' && 
       i.nombre && 
       i.nombre.trim() !== '' && 
-      i.maxPalabras > 0
+      i.palabras && 
+      i.palabras.length > 0
     );
     
     if (idiomasValidos.length === 0) {
-      setMensaje('⚠️ Debe configurar al menos un idioma completo');
+      setMensaje('⚠️ Debe configurar al menos un idioma con palabras');
       return;
     }
 
@@ -77,8 +81,21 @@ const GameSetup = ({ onGameReady }) => {
     setError(null);
     
     try {
+      // Convertir al formato esperado por el backend
+      const idiomasConfig = idiomasValidos.map(idioma => ({
+        codigo: idioma.codigo,
+        nombre: idioma.nombre,
+        maxPalabras: idioma.cantidadEnCarton
+      }));
+
+      // Bancos declarados (incluye idiomas personalizados)
+      const bancosIdiomas = idiomasValidos.reduce((acc, idioma) => {
+        acc[idioma.codigo] = idioma.palabras || [];
+        return acc;
+      }, {});
+
       // Enviar archivo CON configuración de idiomas
-      const resultado = await api.cargarMasivo(archivo, nJugadores, idiomasValidos, ruleType);
+      const resultado = await api.cargarMasivo(archivo, nJugadores, idiomasConfig, ruleType, bancosIdiomas);
       
       setMensaje(`✅ ${resultado.message}`);
       
@@ -120,67 +137,53 @@ const GameSetup = ({ onGameReady }) => {
         </p>
       </div>
 
-      {/* Configuración de Idiomas */}
-      <div className="config-idiomas">
-        <div className="config-header">
-          <h3>⚙️ Configuración de Idiomas</h3>
+      {/* Configuración de Idiomas - Vista Simple */}
+      <div className="config-idiomas-simple">
+        <div className="config-header-simple">
+          <h3>📚 Idiomas Configurados</h3>
           <button 
-            className="btn-toggle"
-            onClick={() => setMostrarConfig(!mostrarConfig)}
+            className="btn-configurar"
+            onClick={() => setMostrarModalIdiomas(true)}
             type="button"
+            disabled={loading}
           >
-            {mostrarConfig ? '▼ Ocultar' : '▶ Mostrar'}
+            ⚙️ Configurar Bancos de Palabras
           </button>
         </div>
 
-        {mostrarConfig && (
-          <div className="idiomas-list">
-            {idiomas.map((idioma, idx) => (
-              <div key={idx} className="idioma-row">
-                <input
-                  type="text"
-                  placeholder="Código (ej: SP)"
-                  value={idioma.codigo}
-                  onChange={(e) => actualizarIdioma(idx, 'codigo', e.target.value)}
-                  maxLength="2"
-                  disabled={loading}
-                />
-                <input
-                  type="text"
-                  placeholder="Nombre (ej: Español)"
-                  value={idioma.nombre}
-                  onChange={(e) => actualizarIdioma(idx, 'nombre', e.target.value)}
-                  disabled={loading}
-                />
-                <input
-                  type="number"
-                  placeholder="Max palabras"
-                  value={idioma.maxPalabras || ''}
-                  onChange={(e) => actualizarIdioma(idx, 'maxPalabras', e.target.value)}
-                  min="1"
-                  disabled={loading}
-                />
-                <button
-                  className="btn-eliminar"
-                  onClick={() => eliminarIdioma(idx)}
-                  disabled={loading || idiomas.length <= 1}
-                  type="button"
-                >
-                  🗑️
-                </button>
+        {/* Tarjetas de idiomas mostrando máximo de palabras */}
+        <div className="idiomas-summary">
+          {idiomas.map((idioma) => (
+            <div key={idioma.codigo} className="idioma-summary-card">
+              <div className="idioma-summary-code">{idioma.codigo}</div>
+              <div className="idioma-summary-info">
+                <h4>{idioma.nombre}</h4>
+                <div className="cantidad-input-wrapper">
+                  <input
+                    type="number"
+                    min="0"
+                    value={idioma.cantidadEnCarton || 0}
+                    onChange={(e) => actualizarCantidadCarton(idioma.codigo, e.target.value)}
+                    disabled={loading}
+                    className="input-cantidad-carton"
+                  />
+                  <span>palabras/cartón</span>
+                </div>
               </div>
-            ))}
-            <button 
-              className="btn-agregar"
-              onClick={agregarIdioma}
-              disabled={loading}
-              type="button"
-            >
-              ➕ Agregar Idioma
-            </button>
-          </div>
-        )}
+            </div>
+          ))}
+        </div>
       </div>
+
+      {/* Modal de configuración de idiomas */}
+      {mostrarModalIdiomas && (
+        <IdiomasModal
+          idiomas={idiomas}
+          setIdiomas={setIdiomas}
+          onClose={() => setMostrarModalIdiomas(false)}
+          loading={loading}
+        />
+      )}
 
       {/* Formulario de carga */}
       <div className="form-container">
@@ -209,6 +212,7 @@ const GameSetup = ({ onGameReady }) => {
             accept=".txt" 
             onChange={(e) => setArchivo(e.target.files[0])}
             disabled={loading}
+            lang="es"
           />
           {archivo && (
             <div className="archivo-info">

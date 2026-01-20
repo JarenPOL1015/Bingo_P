@@ -18,6 +18,11 @@ class GameManager:
         self.palabras_cantadas: List[str] = []
         self.idiomas_configurados: List[str] = []  # se setea al cargar cartones
         self.nombres_idiomas_config: Dict[str, str] = {}
+        # Banco de palabras disponible por idioma (referencia config)
+        # Copiamos el banco para poder mutarlo con idiomas personalizados
+        self.banco_palabras: Dict[str, List[str]] = {
+            codigo: list(palabras) for codigo, palabras in BANCO_PALABRAS.items()
+        }
         
     def crear_carton_desde_txt(self, linea: str, reglas: dict, linea_num: int) -> Tuple[Optional[Carton], Optional[str]]:
         """
@@ -62,7 +67,7 @@ class GameManager:
         
         return Carton(id_c, palabras), None
     
-    def cargar_cartones_masivos(self, contenido_txt: str, n_jugadores: int, reglas_idiomas: dict, rule_type: str = "minimo_uno") -> Tuple[bool, str, Optional[str]]:
+    def cargar_cartones_masivos(self, contenido_txt: str, n_jugadores: int, reglas_idiomas: dict, bancos_config: Optional[Dict[str, List[str]]] = None, rule_type: str = "minimo_uno") -> Tuple[bool, str, Optional[str]]:
         """
         Carga cartones con reglas dinámicas.
         TERMINA EN EL PRIMER ERROR.
@@ -72,6 +77,9 @@ class GameManager:
         lista_bruta = []
         linea_num = 0
         conteo_por_idioma = {codigo: 0 for codigo in reglas_idiomas.keys()}
+        # Acumula el banco real de cada idioma cargado (incluye personalizados)
+        banco_cargado: Dict[str, set] = {codigo: set() for codigo in reglas_idiomas.keys()}
+        bancos_config = bancos_config or {}
         
         for linea in contenido_txt.split('\n'):
             linea_num += 1
@@ -87,6 +95,7 @@ class GameManager:
                     idioma_carton = carton.get_idioma()
                     if idioma_carton in conteo_por_idioma:
                         conteo_por_idioma[idioma_carton] += 1
+                        banco_cargado[idioma_carton].update(carton.palabras)
         
         if not lista_bruta:
             return False, "No se pudieron cargar cartones válidos", None
@@ -102,6 +111,19 @@ class GameManager:
         # Registrar idiomas configurados para el orden de juego y sus nombres
         self.idiomas_configurados = list(conteo_por_idioma.keys())
         self.nombres_idiomas_config = {codigo: reglas_idiomas[codigo]['nombre'] for codigo in conteo_por_idioma.keys()}
+
+        # Construir banco de palabras efectivo (predefinidos + personalizados)
+        nuevo_banco: Dict[str, List[str]] = {}
+        for codigo in self.idiomas_configurados:
+            base = set(BANCO_PALABRAS.get(codigo, []))
+            # Para idiomas personalizados, banco_cargado tendrá las palabras vistas en sus cartones
+            base.update(banco_cargado.get(codigo, set()))
+            # Además, incorporar banco declarado en la configuración (ej. creado en el front)
+            config_words = bancos_config.get(codigo, [])
+            if config_words:
+                base.update([p.upper() for p in config_words])
+            nuevo_banco[codigo] = sorted(base)
+        self.banco_palabras = nuevo_banco
         
         # Repartir cartones según regla
         jugadores_cartones: List[List[Carton]] = [[] for _ in range(n_jugadores)]
@@ -185,11 +207,11 @@ class GameManager:
     
     def generar_carton_aleatorio(self, idioma: str) -> Optional[Carton]:
         """Genera un cartón aleatorio para un idioma"""
-        if idioma not in BANCO_PALABRAS:
+        if idioma not in self.banco_palabras:
             return None
         
         cant = REGLAS_TAMANO[idioma]
-        palabras = random.sample(BANCO_PALABRAS[idioma], cant)
+        palabras = random.sample(self.banco_palabras[idioma], cant)
         
         # Generar ID único
         import time
@@ -241,39 +263,13 @@ class GameManager:
         
         idioma_actual = self.orden_idiomas[self.idioma_actual_idx]
 
-        # Validar que la palabra pertenezca al idioma actual
-        if idioma_actual in BANCO_PALABRAS:
-            # Para idiomas predefinidos, validar contra el banco
-            banco = BANCO_PALABRAS[idioma_actual]
-            if palabra not in banco:
-                return {
-                    "error": f"La palabra '{palabra}' no pertenece al idioma {idioma_actual}",
-                    "idioma": idioma_actual
-                }
-        else:
-            # Para idiomas personalizados, validar que la palabra exista SOLO en cartones de ese idioma
-            palabra_valida = False
-            for jug in self.jugadores:
-                for carton in jug.cartones:
-                    if carton.get_idioma() == idioma_actual and palabra in carton.palabras:
-                        palabra_valida = True
-                        break
-                if palabra_valida:
-                    break
-            
-            if not palabra_valida:
-                return {
-                    "error": f"La palabra '{palabra}' no existe en ningún cartón del idioma {idioma_actual}",
-                    "idioma": idioma_actual
-                }
-            
-            # Validación adicional: rechazar palabras de otros idiomas predefinidos
-            for idioma_pred in BANCO_PALABRAS:
-                if palabra in BANCO_PALABRAS[idioma_pred]:
-                    return {
-                        "error": f"La palabra '{palabra}' pertenece al idioma {idioma_pred}, no al idioma personalizado {idioma_actual}",
-                        "idioma": idioma_actual
-                    }
+        # Validar contra el banco configurado (predefinido o personalizado)
+        banco = self.banco_palabras.get(idioma_actual, [])
+        if banco and palabra not in banco:
+            return {
+                "error": f"La palabra '{palabra}' no pertenece al idioma {idioma_actual}",
+                "idioma": idioma_actual
+            }
 
         # Registrar palabra con su idioma
         self.palabras_cantadas.append({
@@ -332,5 +328,7 @@ class GameManager:
             "orden_idiomas": self.orden_idiomas,
             "palabras_cantadas": self.palabras_cantadas,
             "total_jugadores": len(self.jugadores),
-            "nombres_idiomas_config": self.nombres_idiomas_config
+            "nombres_idiomas_config": self.nombres_idiomas_config,
+            # Banco de palabras por idioma para mostrarlos en el front
+            "banco_palabras": {codigo: self.banco_palabras.get(codigo, []) for codigo in self.orden_idiomas}
         }
