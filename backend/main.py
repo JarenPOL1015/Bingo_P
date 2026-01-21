@@ -177,21 +177,6 @@ async def cargar_masivo(
             "linea": None
         })
 
-@app.post("/api/agregar-jugador")
-def agregar_jugador(jugador: JugadorManual):
-    """Agrega un jugador con cartones manuales"""
-    cartones_data = [{"id": c.id, "palabras": c.palabras} for c in jugador.cartones]
-    exito, mensaje = game.agregar_jugador_manual(jugador.nombre, cartones_data)
-    
-    if not exito:
-        raise HTTPException(status_code=400, detail=mensaje)
-    
-    return {
-        "success": True,
-        "message": mensaje,
-        "estado": game.get_estado_juego()
-    }
-
 @app.post("/api/generar-carton-aleatorio/{idioma}")
 def generar_carton_aleatorio(idioma: str):
     """Genera un cartón aleatorio para un idioma"""

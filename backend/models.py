@@ -6,14 +6,9 @@ class Carton:
     """
     Clase Carton con estrategia Divide y Conquista.
     - Búsqueda Binaria O(log n)
-    - Lista ordenada (Timsort O(n log n))
     """
     def __init__(self, id_carton, palabras):
         self.id = id_carton.upper()
-        
-        # --- DAC: PREPROCESAMIENTO ---
-        # Ordenamos las palabras para habilitar la Búsqueda Binaria.
-        # Python usa Timsort (MergeSort optimizado) -> O(n log n).
         self.palabras = sorted([p.upper() for p in palabras]) 
         
         self.total_palabras = len(self.palabras)

@@ -171,17 +171,15 @@ const IdiomasModal = ({ idiomas, setIdiomas, onClose, loading }) => {
                       />
                     </div>
                     <span className="palabra-count">{idioma.palabras.length} disponibles</span>
-                    {!['SP', 'EN', 'PT', 'DT'].includes(idioma.codigo) && (
-                      <button
-                        className="btn-eliminar-idioma"
-                        onClick={() => eliminarIdioma(idioma.codigo)}
-                        disabled={loading}
-                        type="button"
-                        title="Eliminar idioma"
-                      >
-                        🗑️
-                      </button>
-                    )}
+                    <button
+                      className="btn-eliminar-idioma"
+                      onClick={() => eliminarIdioma(idioma.codigo)}
+                      disabled={loading}
+                      type="button"
+                      title="Eliminar idioma"
+                    >
+                      🗑️
+                    </button>
                   </div>
 
                   {/* Editor de palabras */}
