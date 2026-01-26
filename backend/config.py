@@ -2,6 +2,8 @@
 # CONSTANTES Y REGLAS DE NEGOCIO
 # =============================================================================
 
+# Autoría Propia: Cecilia Montes
+
 REGLAS_TAMANO = {
     "SP": 24,  # Español
     "EN": 14,  # Inglés

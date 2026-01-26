@@ -2,6 +2,8 @@
 // API Service - Comunicación con FastAPI Backend
 // =============================================================================
 
+// TODO ESTE CÓDIGO FUE DESARROLLADO POR DARWIN PACHECO
+
 const API_BASE_URL = 'http://localhost:8000/api';
 
 export const api = {

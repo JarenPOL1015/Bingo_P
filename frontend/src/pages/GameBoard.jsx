@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import './GameBoard.css';
 
+/*
+  TODO ESTE CÓDIGO FUE DESARROLLADO POR DARWIN PACHECO
+*/
+
 /**
  * GameBoard - Tablero principal del juego
  * Visualiza cartones y gestiona el flujo del juego

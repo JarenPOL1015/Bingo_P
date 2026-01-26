@@ -1,6 +1,10 @@
 import React from 'react';
 import './BingoCard.css';
 
+/*
+  TODO ESTE CÓDIGO FUE DESARROLLADO POR DARWIN PACHECO
+*/
+
 /**
  * Componente BingoCard - Visualiza un cartón de bingo
  * Mantiene la integridad de los datos procesados por el algoritmo DAC
