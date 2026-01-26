@@ -52,6 +52,10 @@ const GameBoard = ({ estadoInicial }) => {
       if (resultado.hay_ganador) {
         setGanador(resultado.ganadores);
         setMensaje(`🎉 ¡BINGO! ${resultado.ganadores[0].jugador} ganó con el cartón ${resultado.ganadores[0].carton_id}`);
+      } else if (resultado.reinicio_loop) {
+        setMensaje(`✅ "${resultado.palabra}" cantada. 🔄 Reiniciando desde: ${resultado.idioma_nuevo}`);
+      } else if (resultado.cambio_ronda) {
+        setMensaje(`✅ "${resultado.palabra}" cantada. ⏭️ Siguiente ronda: ${resultado.idioma_nuevo}`);
       } else {
         setMensaje(`✅ "${resultado.palabra}" cantada - Sin ganadores`);
       }
@@ -59,14 +63,6 @@ const GameBoard = ({ estadoInicial }) => {
       await actualizarEstado();
       setPalabraInput('');
 
-      // Avanzar de inmediato a la siguiente ronda si no hay ganador y no terminó
-      if (!resultado.hay_ganador && !resultado.juego_terminado) {
-        try {
-          await handleSiguienteIdioma();
-        } catch (_) {
-          /* ignore */
-        }
-      }
     } catch (error) {
       const detail = error?.response?.data?.detail;
       const msg = typeof detail === 'string' ? detail : (detail?.error || '❌ Error al cantar palabra');

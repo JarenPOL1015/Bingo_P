@@ -1,4 +1,5 @@
 import random
+import re
 from typing import List, Dict, Optional, Tuple
 from models import Carton, Jugador
 from config import REGLAS_TAMANO, NOMBRES_IDIOMAS, BANCO_PALABRAS
@@ -16,7 +17,9 @@ class GameManager:
         self.idioma_actual_idx: int = 0
         self.palabras_cantadas: List[Dict] = []
         self.juego_activo: bool = False
-        self.trace_algoritmo: List[str] = []  # ⭐ NUEVO: Historial de logs
+        self.trace_algoritmo: List[str] = []
+        self.bancos_personalizados: Dict = {}  # ⭐ NUEVO: Bancos del frontend
+        self.reglas_personalizadas: Dict = {}  # ⭐ NUEVO: Reglas del frontend
 
     def _log(self, mensaje: str):
         """Registra un mensaje de traza del algoritmo"""
@@ -99,21 +102,26 @@ class GameManager:
         bancos_config: Dict,
         rule_type: str
     ) -> Tuple[bool, str, Optional[int]]:
-        """Carga y valida cartones desde archivo TXT"""
+        """Carga y valida cartones desde archivo TXT (formato con espacios: ID palabra1 palabra2 ...)"""
         self._reset_trace()
-        self._log("=" * 60)
-        self._log("🎯 INICIANDO CARGA MASIVA DE CARTONES")
-        self._log("=" * 60)
+        
+        # ⭐ GUARDAR los bancos y reglas personalizados
+        self.bancos_personalizados = bancos_config
+        self.reglas_personalizadas = reglas_dinamicas
+        
+        print("=" * 60)
+        print("🎯 INICIANDO CARGA MASIVA DE CARTONES")
+        print("=" * 60)
         
         try:
             lineas = contenido.strip().split('\n')
             cartones_cargados = []
             linea_num = 0
             
-            self._log(f"📄 Archivo tiene {len(lineas)} líneas")
-            self._log(f"👥 Repartiendo entre {n_jugadores} jugadores")
-            self._log(f"📋 Regla: {rule_type}")
-            self._log(f"🌐 Idiomas configurados: {', '.join(reglas_dinamicas.keys())}")
+            print(f"📄 Archivo tiene {len(lineas)} líneas")
+            print(f"👥 Repartiendo entre {n_jugadores} jugadores")
+            print(f"📋 Regla: {rule_type}")
+            print(f"🌐 Idiomas configurados: {', '.join(reglas_dinamicas.keys())}")
             
             for linea in lineas:
                 linea_num += 1
@@ -122,60 +130,62 @@ class GameManager:
                 if not linea or linea.startswith('#'):
                     continue
                 
-                partes = linea.split('|')
-                if len(partes) != 3:
+                partes = linea.split()
+                if len(partes) < 2:
+                    print(f"❌ ERROR: Formato inválido en línea {linea_num}")
                     return False, f"Formato inválido en línea {linea_num}", linea_num
                 
-                carton_id, idioma, palabras_str = partes
-                idioma = idioma.strip().upper()
-                palabras = [p.strip().upper() for p in palabras_str.split(',')]
+                carton_id = partes[0].strip()
+                match = re.match(r'^([A-Z]{2})\d+', carton_id)
+                if not match:
+                    print(f"❌ ERROR: No se puede extraer idioma del ID '{carton_id}' (línea {linea_num})")
+                    return False, f"Formato de ID inválido en línea {linea_num}", linea_num
+                idioma = match.group(1).upper()
+                palabras = [p.strip().upper() for p in partes[1:]]
                 
-                # Validación con logging
                 if idioma not in reglas_dinamicas:
-                    self._log(f"❌ ERROR: Idioma '{idioma}' no configurado en línea {linea_num}")
+                    print(f"❌ ERROR: Idioma '{idioma}' no configurado en línea {linea_num}")
                     return False, f"Idioma '{idioma}' no está configurado", linea_num
                 
                 esperadas = reglas_dinamicas[idioma]['max_palabras']
                 if len(palabras) != esperadas:
-                    self._log(f"❌ ERROR: Cartón requiere {esperadas} palabras, recibió {len(palabras)}")
+                    print(f"❌ ERROR: Cartón requiere {esperadas} palabras, recibió {len(palabras)} (línea {linea_num})")
                     return False, f"El cartón requiere exactamente {esperadas} palabras", linea_num
                 
-                # Validar contra banco de palabras
                 if idioma in bancos_config:
                     banco = bancos_config[idioma]
                     for palabra in palabras:
                         if palabra not in banco:
-                            self._log(f"❌ ERROR: '{palabra}' no existe en banco de {idioma}")
+                            print(f"❌ ERROR: '{palabra}' no existe en banco de {idioma} (línea {linea_num})")
                             return False, f"La palabra '{palabra}' no pertenece al idioma {idioma}", linea_num
                 
-                carton = Carton(carton_id.strip(), idioma, palabras)
+                carton = Carton(carton_id, idioma, palabras)
                 cartones_cargados.append(carton)
             
-            self._log(f"✅ {len(cartones_cargados)} cartones validados correctamente")
+            print(f"✅ {len(cartones_cargados)} cartones validados correctamente")
             
-            # Algoritmo de reparto
-            self._log("\n" + "=" * 60)
-            self._log("🎲 ALGORITMO DE REPARTO DE CARTONES")
-            self._log("=" * 60)
+            print("\n" + "=" * 60)
+            print("🎲 ALGORITMO DE REPARTO DE CARTONES")
+            print("=" * 60)
             
             if rule_type == "uno_por_idioma":
-                self._log("📌 Estrategia: Un cartón de cada idioma por jugador")
+                print("📌 Estrategia: Un cartón de cada idioma por jugador")
                 exito, mensaje = self._repartir_uno_por_idioma(cartones_cargados, n_jugadores, reglas_dinamicas)
             else:
-                self._log("📌 Estrategia: Mínimo un cartón por jugador")
+                print("📌 Estrategia: Mínimo un cartón por jugador")
                 exito, mensaje = self._repartir_minimo_uno(cartones_cargados, n_jugadores)
             
             if not exito:
                 return False, mensaje, None
             
-            self._log("\n" + "=" * 60)
-            self._log("✅ CARGA COMPLETADA EXITOSAMENTE")
-            self._log("=" * 60)
+            print("\n" + "=" * 60)
+            print("✅ CARGA COMPLETADA EXITOSAMENTE")
+            print("=" * 60)
             
             return True, f"Se cargaron {len(cartones_cargados)} cartones para {n_jugadores} jugadores", None
             
         except Exception as e:
-            self._log(f"❌ ERROR INESPERADO: {str(e)}")
+            print(f"❌ ERROR INESPERADO: {str(e)}")
             return False, f"Error al procesar: {str(e)}", None
 
     def _repartir_minimo_uno(self, cartones: List[Carton], n_jugadores: int) -> Tuple[bool, str]:
@@ -278,13 +288,7 @@ class GameManager:
         self._log(f"🌐 Idiomas detectados: {', '.join(idiomas_unicos)}")
         
         self.orden_idiomas = list(idiomas_unicos)
-        self._log(f"🔀 Mezclando orden de idiomas aleatoriamente...")
         random.shuffle(self.orden_idiomas)
-        
-        self._log(f"📋 Orden final de juego:")
-        for i, idioma in enumerate(self.orden_idiomas, 1):
-            self._log(f"   {i}. {idioma}")
-        
         self.idioma_actual_idx = 0
         self.juego_activo = True
         self.palabras_cantadas = []
@@ -294,8 +298,11 @@ class GameManager:
         return {
             "message": "Juego iniciado",
             "orden_idiomas": self.orden_idiomas,
-            "idioma_actual": self.orden_idiomas[0],
-            "trace": self.trace_algoritmo
+            "idioma_actual": {
+                "codigo": self.orden_idiomas[0],
+                "nombre": NOMBRES_IDIOMAS.get(self.orden_idiomas[0], self.orden_idiomas[0]),
+                "indice": 0
+            }
         }
 
     def cantar_palabra(self, palabra: str) -> Dict:
@@ -312,6 +319,20 @@ class GameManager:
         idioma_actual = self.orden_idiomas[self.idioma_actual_idx]
         
         self._log(f"🌐 Idioma actual: {idioma_actual}")
+        
+        # ⭐ VALIDAR que la palabra pertenece al banco del idioma actual
+        banco_actual = self.bancos_personalizados.get(idioma_actual, BANCO_PALABRAS.get(idioma_actual, []))
+        
+        if palabra not in banco_actual:
+            self._log(f"❌ Palabra '{palabra}' NO pertenece al idioma {idioma_actual}")
+            return {
+                "error": f"La palabra '{palabra}' no pertenece al banco del idioma {idioma_actual}",
+                "palabra_invalida": True,
+                "idioma": idioma_actual,
+                "trace": self.trace_algoritmo
+            }
+        
+        self._log(f"✅ Palabra '{palabra}' es válida para {idioma_actual}")
         self._log(f"🔍 Buscando ganadores con búsqueda binaria...")
         
         self.palabras_cantadas.append({
@@ -346,19 +367,48 @@ class GameManager:
                         })
                         self._log(f"   🏆 ¡¡¡BINGO!!! {jugador.nombre} gana con cartón {carton.id}")
         
+        # ⭐ CAMBIO AUTOMÁTICO DE RONDA - LOOP INFINITO hasta que haya ganador
+        cambio_ronda = False
+        idioma_nuevo = None
+        reinicio_loop = False
+        
+        if not ganadores:
+            idioma_anterior = self.orden_idiomas[self.idioma_actual_idx]
+            
+            # Avanzar al siguiente idioma
+            self.idioma_actual_idx += 1
+            
+            # Si llegamos al final, reiniciar desde el principio (LOOP)
+            if self.idioma_actual_idx >= len(self.orden_idiomas):
+                self.idioma_actual_idx = 0
+                reinicio_loop = True
+                self._log(f"\n🔄 REINICIANDO LOOP DE IDIOMAS")
+            
+            idioma_nuevo = self.orden_idiomas[self.idioma_actual_idx]
+            cambio_ronda = True
+            
+            self._log(f"\n⏭️ CAMBIO AUTOMÁTICO DE RONDA")
+            self._log(f"   Idioma anterior: {idioma_anterior}")
+            self._log(f"   Nuevo idioma: {idioma_nuevo}")
+            self._log(f"   Progreso: {self.idioma_actual_idx + 1}/{len(self.orden_idiomas)}")
+            if reinicio_loop:
+                self._log(f"   ♻️ Se reinició el ciclo de idiomas")
+        
         resultado = {
             "palabra": palabra,
             "hay_ganador": len(ganadores) > 0,
             "ganadores": ganadores,
             "idioma": idioma_actual,
-            "juego_terminado": False,
+            "juego_terminado": len(ganadores) > 0,  # Solo termina si hay ganador
+            "cambio_ronda": cambio_ronda,
+            "idioma_nuevo": idioma_nuevo,
+            "reinicio_loop": reinicio_loop,
             "trace": self.trace_algoritmo
         }
         
         if ganadores:
             self.juego_activo = False
-            resultado["juego_terminado"] = True
-            self._log("\n🎉 ¡JUEGO TERMINADO!")
+            self._log("\n🎉 ¡JUEGO TERMINADO CON GANADOR!")
         
         return resultado
 
@@ -390,15 +440,31 @@ class GameManager:
 
     def get_estado_juego(self) -> Dict:
         """Obtiene el estado completo del juego"""
+        idioma_actual = None
+        if self.orden_idiomas:
+            codigo = self.orden_idiomas[self.idioma_actual_idx]
+            idioma_actual = {
+                "codigo": codigo,
+                "nombre": NOMBRES_IDIOMAS.get(codigo, codigo),
+                "indice": self.idioma_actual_idx
+            }
+        
+        # ⭐ Usar bancos personalizados si existen, sino los de config.py
+        bancos_a_enviar = self.bancos_personalizados if self.bancos_personalizados else BANCO_PALABRAS
+        
         return {
             "juego_activo": self.juego_activo,
-            "idioma_actual": self.orden_idiomas[self.idioma_actual_idx] if self.orden_idiomas else None,
+            "idioma_actual": idioma_actual,
             "orden_idiomas": self.orden_idiomas,
+            "idiomas_orden": [
+                {"codigo": c, "nombre": NOMBRES_IDIOMAS.get(c, c)}
+                for c in self.orden_idiomas
+            ],
             "idx_idioma": self.idioma_actual_idx,
             "palabras_cantadas": self.palabras_cantadas,
             "total_jugadores": len(self.jugadores),
             "jugadores": [j.to_dict() for j in self.jugadores],
-            "trace_ultimo": self.trace_algoritmo  # Última operación ejecutada
+            "banco_palabras": bancos_a_enviar  # ⭐ Enviar bancos personalizados
         }
 
     def generar_carton_aleatorio(self, idioma: str) -> Optional[Carton]:

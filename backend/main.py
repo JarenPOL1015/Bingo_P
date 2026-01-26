@@ -89,54 +89,51 @@ async def cargar_masivo(
         contenido = await file.read()
         contenido_str = contenido.decode('utf-8')
         
-        # Parsear configuración de idiomas desde JSON
         import json
         idiomas_config = json.loads(config_idiomas)
         
-        # Crear diccionario de reglas dinámicas con validación
         reglas_dinamicas = {}
         for idioma in idiomas_config:
             codigo = idioma.get('codigo', '').strip().upper()
             nombre = idioma.get('nombre', '').strip()
             max_palabras = idioma.get('maxPalabras')
-            
-            # Validar que todo esté completo
             if not codigo or not nombre:
                 continue
-            
-            # Convertir maxPalabras a int de forma segura
             try:
                 max_palabras = int(max_palabras)
                 if max_palabras <= 0:
                     continue
             except (ValueError, TypeError):
                 continue
-            
             reglas_dinamicas[codigo] = {
                 'max_palabras': max_palabras,
                 'nombre': nombre
             }
 
-        # Validar que haya al menos un idioma configurado
         if not reglas_dinamicas:
             raise HTTPException(status_code=400, detail={
                 "error": "No se encontraron idiomas válidos en la configuración",
                 "linea": None
             })
 
-        # Parsear bancos de palabras declarados por el front (pueden venir vacíos)
         bancos_config = {}
         try:
             bancos_raw = json.loads(bancos_idiomas)
             if isinstance(bancos_raw, dict):
+                print("\n" + "=" * 60)
+                print("PROCESANDO BANCOS DE PALABRAS")
+                print("=" * 60)
                 for codigo, palabras in bancos_raw.items():
                     if not isinstance(palabras, list):
                         continue
-                    bancos_config[codigo.upper()] = [str(p).upper() for p in palabras]
+                    codigo_u = codigo.upper()
+                    palabras_u = [str(p).upper() for p in palabras]
+                    bancos_config[codigo_u] = palabras_u
+                    print(f"\n-> {codigo_u}: {len(palabras_u)} palabras")
         except json.JSONDecodeError:
             bancos_config = {}
-        
-        # Cargar cartones con reglas dinámicas
+            print("ERROR: No se pudieron leer bancos de palabras")
+
         exito, mensaje, error_linea = game.cargar_cartones_masivos(
             contenido_str, 
             n_jugadores,
@@ -146,14 +143,11 @@ async def cargar_masivo(
         )
         
         if not exito:
-            # Error en validación - devolver inmediatamente
-            detail = {
+            raise HTTPException(status_code=400, detail={
                 "error": mensaje,
                 "linea": error_linea
-            }
-            raise HTTPException(status_code=400, detail=detail)
+            })
 
-        # Iniciar juego inmediatamente para tener idioma_actual y orden_idiomas listos
         inicio = game.iniciar_juego()
         if "error" in inicio:
             raise HTTPException(status_code=400, detail=inicio["error"])

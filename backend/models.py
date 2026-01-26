@@ -8,8 +8,9 @@ class Carton:
     - Búsqueda Binaria O(log n)
     """
     # Autoría Propia: Jaren Pazmiño
-    def __init__(self, id_carton, palabras):
+    def __init__(self, id_carton, idioma, palabras):
         self.id = id_carton.upper()
+        self.idioma = idioma.upper()
         # Ordenamos las palabras para Búsqueda Binaria
         self.palabras = sorted([p.upper() for p in palabras]) 
         
@@ -19,7 +20,7 @@ class Carton:
 
     # Autoría Propia: Jaren Pazmiño
     def get_idioma(self):
-        return self.id[:2]
+        return self.idioma
 
     # Algoritmo de Búsqueda Binaria tomado de:
     # [1] T. H. Cormen, C. E. Leiserson, R. L. Rivest, and C. Stein, Introduction to Algorithms, 4th ed. Cambridge, MA, USA: MIT Press, 2022.
@@ -62,15 +63,14 @@ class Carton:
         return self.aciertos == self.total_palabras and self.total_palabras > 0
 
     def to_dict(self):
-        """Serialización para API"""
         return {
             "id": self.id,
-            "idioma": self.get_idioma(),
+            "idioma": self.idioma,
             "palabras": self.palabras,
             "palabras_marcadas": list(self.palabras_marcadas),
             "aciertos": self.aciertos,
             "total_palabras": self.total_palabras,
-            "es_ganador": self.es_ganador()
+            "es_ganador": self.aciertos == self.total_palabras
         }
 
 
@@ -78,24 +78,10 @@ class Carton:
 class Jugador:
     def __init__(self, nombre, cartones):
         self.nombre = nombre
-        self.cartones = cartones 
-
-    def verificar_palabra_en_idioma(self, palabra, idioma_actual):
-        cartones_ganadores = []
-        for carton in self.cartones:
-            # OPTIMIZACIÓN: Ignorar cartones de otros idiomas
-            if carton.get_idioma() != idioma_actual:
-                continue 
-
-            if carton.marcar(palabra):
-                if carton.es_ganador():
-                    cartones_ganadores.append(carton.id)
-        return cartones_ganadores
+        self.cartones = cartones
 
     def to_dict(self):
-        """Serialización para API"""
         return {
             "nombre": self.nombre,
-            "cartones": [c.to_dict() for c in self.cartones],
-            "total_cartones": len(self.cartones)
+            "cartones": [c.to_dict() for c in self.cartones]
         }
