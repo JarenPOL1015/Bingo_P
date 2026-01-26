@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import './IdiomasModal.css';
 
+/*
+  TODO ESTE CÓDIGO FUE DESARROLLADO POR DARWIN PACHECO
+*/
+
 // Banco de palabras predefinidas
 const BANCO_PREDEFINIDO = {
   'SP': ['CASA', 'PERRO', 'GATO', 'SOL', 'LUNA', 'PLAYA', 'MAR', 'TIEMPO', 'VIDA', 'MANZANA', 

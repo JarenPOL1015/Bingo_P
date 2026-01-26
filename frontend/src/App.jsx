@@ -3,6 +3,10 @@ import GameSetup from './pages/GameSetup';
 import GameBoard from './pages/GameBoard';
 import './App.css';
 
+/*
+  TODO ESTE CÓDIGO FUE DESARROLLADO POR DARWIN PACHECO
+*/
+
 /**
  * App Principal
  * Gestiona el flujo entre Setup y Juego

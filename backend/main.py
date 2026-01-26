@@ -50,6 +50,8 @@ class ConfigInicio(BaseModel):
 # ENDPOINTS
 # =============================================================================
 
+# Autoría Propia: Darwin Pacheco
+
 @app.get("/")
 def root():
     return {
@@ -251,6 +253,8 @@ def debug_primer_carton():
 # =============================================================================
 # ENDPOINT DE DEMO PARA PROBAR GANADOR RÁPIDO
 # =============================================================================
+
+# Autoría Propia: Darwin Pacheco
 
 @app.post("/api/debug/bingo-demo")
 def bingo_demo(idioma: str = "SP"):

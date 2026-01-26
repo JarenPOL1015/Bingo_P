@@ -9,7 +9,7 @@ class GameManager:
     Gestor del juego que mantiene la lógica original intacta.
     Estrategia DAC preservada en las clases Carton y Jugador.
     """
-    
+    # Autoría Propia: Cecilia Montes
     def __init__(self):
         self.jugadores: List[Jugador] = []
         self.orden_idiomas: List[str] = []
@@ -23,7 +23,8 @@ class GameManager:
         self.banco_palabras: Dict[str, List[str]] = {
             codigo: list(palabras) for codigo, palabras in BANCO_PALABRAS.items()
         }
-        
+    
+    # Autoría Propia: Jose Adrian
     def crear_carton_desde_txt(self, linea: str, reglas: dict, linea_num: int) -> Tuple[Optional[Carton], Optional[str]]:
         """
         Crea un cartón desde una línea con validación usando reglas dinámicas.
@@ -67,6 +68,7 @@ class GameManager:
         
         return Carton(id_c, palabras), None
     
+    # Autoría Propia: Jaren Pazmiño
     def cargar_cartones_masivos(self, contenido_txt: str, n_jugadores: int, reglas_idiomas: dict, bancos_config: Optional[Dict[str, List[str]]] = None, rule_type: str = "minimo_uno") -> Tuple[bool, str, Optional[str]]:
         """
         Carga cartones con reglas dinámicas.
@@ -171,6 +173,7 @@ class GameManager:
         mensaje = f"{len(lista_bruta)} cartones cargados y repartidos entre {n_jugadores} jugadores"
         return True, mensaje, None
     
+    # Autoría Propia: José Adrian
     def crear_carton_manual(self, id_carton: str, palabras: List[str]) -> Tuple[bool, str, Optional[Carton]]:
         """
         Crea un cartón manual con validación de reglas.
@@ -189,6 +192,7 @@ class GameManager:
         carton = Carton(id_carton, palabras)
         return True, "Cartón creado exitosamente", carton
     
+    # Autoría Propia: Jaren Pazmiño
     def agregar_jugador_manual(self, nombre: str, cartones: List[Dict]) -> Tuple[bool, str]:
         """Agrega un jugador con cartones manuales"""
         cartones_obj = []
@@ -205,6 +209,7 @@ class GameManager:
         self.jugadores.append(Jugador(nombre, cartones_obj))
         return True, f"Jugador {nombre} agregado con {len(cartones_obj)} cartones"
     
+    # Autoría Propia: Jaren Pazmiño
     def generar_carton_aleatorio(self, idioma: str) -> Optional[Carton]:
         """Genera un cartón aleatorio para un idioma"""
         if idioma not in self.banco_palabras:
@@ -219,6 +224,7 @@ class GameManager:
         
         return Carton(id_carton, palabras)
     
+    # Autoría Propia: Jaren Pazmiño
     def iniciar_juego(self) -> Dict:
         """Inicia el juego sorteando el orden de idiomas"""
         if not self.jugadores:
@@ -238,6 +244,7 @@ class GameManager:
             "idioma_actual": self.get_idioma_actual()
         }
     
+    # Autoría Propia: Cecilia Montes
     def get_idioma_actual(self) -> Dict:
         """Obtiene información del idioma actual"""
         if not self.orden_idiomas:
@@ -251,6 +258,7 @@ class GameManager:
             "indice": self.idioma_actual_idx
         }
     
+    # Autoría Propia: Darwin Pacheco
     def cantar_palabra(self, palabra: str) -> Dict:
         """
         Canta una palabra y verifica ganadores.
@@ -305,6 +313,7 @@ class GameManager:
             "juego_terminado": False
         }
     
+    # Autoría Propia: Darwin Pacheco
     def siguiente_idioma(self) -> Dict:
         """Avanza al siguiente idioma (modo cíclico)"""
         if self.idioma_actual_idx < len(self.orden_idiomas) - 1:
@@ -319,6 +328,7 @@ class GameManager:
             "nueva_ronda": self.idioma_actual_idx == 0
         }
     
+    # Autoría Propia: Cecilia Montes
     def get_estado_juego(self) -> Dict:
         """Obtiene el estado completo del juego"""
         return {

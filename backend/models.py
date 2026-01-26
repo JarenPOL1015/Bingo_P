@@ -7,17 +7,22 @@ class Carton:
     Clase Carton con estrategia Divide y Conquista.
     - Búsqueda Binaria O(log n)
     """
+    # Autoría Propia: Jaren Pazmiño
     def __init__(self, id_carton, palabras):
         self.id = id_carton.upper()
+        # Ordenamos las palabras para Búsqueda Binaria
         self.palabras = sorted([p.upper() for p in palabras]) 
         
         self.total_palabras = len(self.palabras)
         self.aciertos = 0
         self.palabras_marcadas = set() 
 
+    # Autoría Propia: Jaren Pazmiño
     def get_idioma(self):
         return self.id[:2]
 
+    # Algoritmo de Búsqueda Binaria tomado de:
+    # [1] T. H. Cormen, C. E. Leiserson, R. L. Rivest, and C. Stein, Introduction to Algorithms, 4th ed. Cambridge, MA, USA: MIT Press, 2022.
     def busqueda_binaria(self, objetivo):
         """
         DAC: Divide el espacio de búsqueda en mitades. Complejidad: O(log n).
@@ -37,6 +42,7 @@ class Carton:
                 derecha = medio - 1 
         return False 
 
+    # Autoría Propia: Jaren Pazmiño
     def marcar(self, palabra_cantada):
         palabra_cantada = palabra_cantada.upper()
         
@@ -51,6 +57,7 @@ class Carton:
             return True
         return False
 
+    # Autoría Propia: Jaren Pazmiño
     def es_ganador(self):
         return self.aciertos == self.total_palabras and self.total_palabras > 0
 
@@ -67,6 +74,7 @@ class Carton:
         }
 
 
+# Autoría Propia: Darwin Pacheco
 class Jugador:
     def __init__(self, nombre, cartones):
         self.nombre = nombre
