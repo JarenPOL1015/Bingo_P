@@ -18,18 +18,24 @@ class GameManager:
         self.palabras_cantadas: List[Dict] = []
         self.juego_activo: bool = False
         self.trace_algoritmo: List[str] = []
-        self.bancos_personalizados: Dict = {}  # ⭐ NUEVO: Bancos del frontend
-        self.reglas_personalizadas: Dict = {}  # ⭐ NUEVO: Reglas del frontend
+        self.bancos_personalizados: Dict = {}  
+        self.reglas_personalizadas: Dict = {}  
 
+    # Autoría Propia: Cecilia Montes
     def _log(self, mensaje: str):
         """Registra un mensaje de traza del algoritmo"""
-        print(f"[ALGORITMO] {mensaje}")  # Consola
-        self.trace_algoritmo.append(mensaje)  # JSON response
+        print(f"[ALGORITMO] {mensaje}")
+        self.trace_algoritmo.append(mensaje)
 
+    # Autoría Propia: Cecilia Montes
     def _reset_trace(self):
         """Limpia el log de trazas para nueva operación"""
         self.trace_algoritmo = []
 
+    # Algoritmo de Búsqueda Binaria tomado de:
+    # [1] T. H. Cormen, C. E. Leiserson, R. L. Rivest, and C. Stein, 
+    #     Introduction to Algorithms, 4th ed. Cambridge, MA, USA: MIT Press, 2022.
+    # Modificado por: Jaren Pazmiño - Se agregó logging de trazas
     def busqueda_binaria_palabra(self, palabras_ordenadas: List[str], palabra_buscar: str) -> Tuple[bool, int]:
         """
         Búsqueda binaria de palabra en lista ordenada.
@@ -62,6 +68,10 @@ class GameManager:
         self._log(f"   ❌ Palabra no encontrada después de {iteracion} iteraciones")
         return False, -1
 
+    # Algoritmo de Merge Sort tomado de:
+    # [1] T. H. Cormen, C. E. Leiserson, R. L. Rivest, and C. Stein, 
+    #     Introduction to Algorithms, 4th ed. Cambridge, MA, USA: MIT Press, 2022.
+    # Modificado por: Cecilia Montes - Se agregó logging de trazas
     def merge_sort(self, arr: List[str]) -> List[str]:
         """Implementación de Merge Sort con logging"""
         if len(arr) <= 1:
@@ -76,6 +86,7 @@ class GameManager:
         self._log(f"🔗 Fusionando sublistas: izq({len(izq)}) + der({len(der)})")
         return self._merge(izq, der)
 
+    # Autoría Propia: Cecilia Montes
     def _merge(self, izq: List[str], der: List[str]) -> List[str]:
         """Fusión de dos listas ordenadas"""
         resultado = []
@@ -94,6 +105,7 @@ class GameManager:
         
         return resultado
 
+    # Autoría Propia: Cecilia Montes
     def cargar_cartones_masivos(
         self, 
         contenido: str, 
@@ -105,7 +117,7 @@ class GameManager:
         """Carga y valida cartones desde archivo TXT (formato con espacios: ID palabra1 palabra2 ...)"""
         self._reset_trace()
         
-        # ⭐ GUARDAR los bancos y reglas personalizados
+        # GUARDAR los bancos y reglas personalizados
         self.bancos_personalizados = bancos_config
         self.reglas_personalizadas = reglas_dinamicas
         
@@ -188,6 +200,7 @@ class GameManager:
             print(f"❌ ERROR INESPERADO: {str(e)}")
             return False, f"Error al procesar: {str(e)}", None
 
+    # Autoría Propia: Cecilia Montes
     def _repartir_minimo_uno(self, cartones: List[Carton], n_jugadores: int) -> Tuple[bool, str]:
         """Reparte cartones asegurando mínimo uno por jugador"""
         self._log(f"🔄 Mezclando {len(cartones)} cartones aleatoriamente...")
@@ -227,6 +240,7 @@ class GameManager:
         
         return True, "Cartones repartidos exitosamente"
 
+    # Autoría Propia: Cecilia Montes
     def _repartir_uno_por_idioma(self, cartones: List[Carton], n_jugadores: int, reglas: Dict) -> Tuple[bool, str]:
         """Reparte asegurando un cartón de cada idioma por jugador"""
         self._log("🌐 Organizando cartones por idioma...")
@@ -270,6 +284,7 @@ class GameManager:
         
         return True, "Cartones repartidos exitosamente"
 
+    # Autoría Propia: Cecilia Montes
     def iniciar_juego(self) -> Dict:
         """Inicia el juego sorteando orden de idiomas"""
         self._reset_trace()
@@ -305,6 +320,9 @@ class GameManager:
             }
         }
 
+    # Autoría Propia: Jaren Pazmiño
+    # Implementa búsqueda binaria para verificar palabras en cartones
+    # Incluye loop infinito de rondas hasta que haya ganador
     def cantar_palabra(self, palabra: str) -> Dict:
         """Canta una palabra y verifica ganadores"""
         self._reset_trace()
@@ -320,7 +338,7 @@ class GameManager:
         
         self._log(f"🌐 Idioma actual: {idioma_actual}")
         
-        # ⭐ VALIDAR que la palabra pertenece al banco del idioma actual
+        # VALIDAR que la palabra pertenece al banco del idioma actual
         banco_actual = self.bancos_personalizados.get(idioma_actual, BANCO_PALABRAS.get(idioma_actual, []))
         
         if palabra not in banco_actual:
@@ -367,7 +385,7 @@ class GameManager:
                         })
                         self._log(f"   🏆 ¡¡¡BINGO!!! {jugador.nombre} gana con cartón {carton.id}")
         
-        # ⭐ CAMBIO AUTOMÁTICO DE RONDA - LOOP INFINITO hasta que haya ganador
+        # CAMBIO AUTOMÁTICO DE RONDA - LOOP INFINITO hasta que haya ganador
         cambio_ronda = False
         idioma_nuevo = None
         reinicio_loop = False
@@ -412,6 +430,7 @@ class GameManager:
         
         return resultado
 
+    # Autoría Propia: Cecilia Montes
     def siguiente_idioma(self) -> Dict:
         """Avanza al siguiente idioma"""
         self._reset_trace()
@@ -438,6 +457,7 @@ class GameManager:
             "trace": self.trace_algoritmo
         }
 
+    # Autoría Propia: Cecilia Montes
     def get_estado_juego(self) -> Dict:
         """Obtiene el estado completo del juego"""
         idioma_actual = None
@@ -449,7 +469,7 @@ class GameManager:
                 "indice": self.idioma_actual_idx
             }
         
-        # ⭐ Usar bancos personalizados si existen, sino los de config.py
+        # Usar bancos personalizados si existen, sino los de config.py
         bancos_a_enviar = self.bancos_personalizados if self.bancos_personalizados else BANCO_PALABRAS
         
         return {
@@ -464,9 +484,10 @@ class GameManager:
             "palabras_cantadas": self.palabras_cantadas,
             "total_jugadores": len(self.jugadores),
             "jugadores": [j.to_dict() for j in self.jugadores],
-            "banco_palabras": bancos_a_enviar  # ⭐ Enviar bancos personalizados
+            "banco_palabras": bancos_a_enviar
         }
 
+    # Autoría Propia: Cecilia Montes
     def generar_carton_aleatorio(self, idioma: str) -> Optional[Carton]:
         """Genera un cartón aleatorio"""
         self._reset_trace()
